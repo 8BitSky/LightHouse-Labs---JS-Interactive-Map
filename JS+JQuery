@@ -1,0 +1,263 @@
+const GRID = [
+  ["", "", "", "^", "", "", "", "", "", ""],
+  ["", "", "v", "", "~", "", "", "", "", ""],
+  ["", "v", "", "", "^", "^", "", "", "", ""],
+  ["", "", "", "", "^", "^", "", "", "", ""],
+  ["", "", "", "", "", "", "", "", "v", ""],
+  ["", "", "", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", "", "", ""],
+  ["", "^", "~", "~", "", "", "", "^", "", ""],
+  ["", "^", "", "~", "~", "", "", "", "", ""],
+  ["", "^", "", "", "~", "~", "", "", "", ""],
+];
+
+var rockIcon = '<i class="fas fa-mountain"></i>';
+var currentIcon = '<i class="fas fa-wind"></i>';
+var shipIcon = '<i class="fas fa-anchor"></i>';
+
+var rockSymbol = "^";
+var currentSymbol = "~";
+var shipSymbol = "v";
+
+function countRows() {
+  return GRID.length;
+}
+
+function countColumns() {
+  return GRID[0].length;
+}
+
+function gridSize() {
+  var width = countColumns();
+  var height = countRows();
+  var gridArea = width + " x " + height;
+  return gridArea;
+}
+
+function totalCells() {
+  var width = countColumns();
+  var hieght = countRows();
+  var numCells = width * hieght;
+  return numCells;
+}
+
+function convertColumn(cell) {
+  var alphaArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", ]
+  var colShortHand = cell.charAt(0);
+  var cellRef = alphaArray.indexOf(colShortHand);
+  return cellRef;
+}
+
+function convertRow(cell) {
+  var rowShortHand = cell.slice(1) - 1;
+  return rowShortHand;
+}
+
+function checkInput(cell) {
+  if (convertRow(cell) <= countRows() && convertColumn(cell) <= countColumns()) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function lightCell(cell) {
+  if (checkInput(cell) === true) {
+    var cellRefRow = convertRow(cell);
+    var cellRefCol = convertColumn(cell);
+    var cellObject = GRID[cellRefRow][cellRefCol];
+    return cellObject;
+  } else {
+    return false;
+  }
+}
+
+function isRock(cell) {
+  var rock = (lightCell(cell) === rockSymbol) ? true : false;
+  return rock;
+}
+
+function isCurrent(cell) {
+  var current = (lightCell(cell) === currentSymbol) ? true : false;
+  return current;
+}
+
+function isShip(cell) {
+  var ship = (lightCell(cell) === shipSymbol) ? true : false;
+  return ship;
+}
+
+function lightRow(row) {
+  var rowValues = GRID[row - 1];
+  return rowValues;
+}
+
+function lightColumn(column) {
+  var columnArray = [];
+  var selectedColumn = convertColumn(column);
+  var numberOfRows = countRows();
+  for (var i = 0; i < numberOfRows; i++) {
+    columnArray[i] = GRID[i][selectedColumn];
+  }
+  return columnArray;
+}
+
+function indexToCol(index) {
+  return String.fromCharCode(index + 65)
+}
+
+function indexToRow(index) {
+  return index + 1;
+}
+
+function searchArray(symbol) {
+  var cellsMatched = [];
+  var str = "";
+  for (var y = 0; y < countRows(); y++) {
+    for (var x = 0; x < countColumns(); x++) {
+      if (GRID[y][x] === symbol) {
+        str = indexToCol(x) + indexToRow(y);
+        cellsMatched.push(str);
+      }
+    }
+  }
+  return cellsMatched;
+}
+
+function allRocks() {
+  return searchArray(rockSymbol).sort();
+}
+
+function allCurrents() {
+  return searchArray(currentSymbol).sort();
+}
+
+function allShips() {
+  return searchArray(shipSymbol).sort();
+}
+
+function firstRock() {
+  var arr = allRocks();
+  return arr[0];
+}
+
+function firstCurrent() {
+  var arr = allCurrents();
+  return arr[0];
+}
+
+function shipReport() {
+  let sortedShips = allShips().slice().sort((a, b) => {
+    return a - b;
+  });
+  let smallest = sortedShips[0],
+    largest = sortedShips[sortedShips.length - 1];
+  let arrShipReport = [smallest, largest];
+  return arrShipReport;
+}
+
+function howDangerous(cell) {
+  if (isRock(cell)) {
+    return 100;
+  } else if (isCurrent(cell)) {
+    return 50;
+  } else {
+    return 0;
+  }
+}
+
+function percentageReport() {
+  var gridSize = totalCells();
+  var pReport = [];
+  var numRocks = allRocks().length;
+  var numCurrents = allCurrents().length;
+  pReport[0] = parseFloat(numRocks / gridSize * 100).toFixed(2);
+  pReport[1] = parseFloat(numCurrents / gridSize * 100).toFixed(2);
+  return pReport;
+}
+
+function howDangerousValue(value) {
+  if (value === rockSymbol) {
+    return 100;
+  } else if (value === currentSymbol) {
+    return 50;
+  } else {
+    return 0;
+  }
+}
+
+function safetyReport() {
+  var safetyGrid = GRID;
+  for (var y = 0; y < countRows(); y++) {
+    for (var x = 0; x < countColumns(); x++) {
+      const coord = String.fromCharCode(65 + x) + (y + 1);
+      safetyGrid[y][x] = howDangerous(coord)
+    }
+  }
+  return safetyGrid;
+}
+
+function calcDistance(point1, point2) {
+  var xDist = Math.abs(convertColumn(point2) - convertColumn(point1));
+  var yDist = Math.abs(convertRow(point2) - convertRow(point1));
+  var distance = Math.sqrt((Math.pow(xDist, 2)) + (Math.pow(yDist, 2)));
+  return parseFloat(distance).toFixed(2);
+}
+
+// UI Code Starts Here
+
+function createTable(tableData) {
+  var table = document.createElement('table');
+  var row = {};
+  var cell = {};
+
+  tableData.forEach(function(rowData) {
+    row = table.insertRow(-1); // [-1] for last position in Safari
+    rowData.forEach(function(cellData) {
+      cell = row.insertCell();
+      cell.textContent = cellData;
+      if (cellData == "^") {
+        cell.className = "rocks";
+        cell.innerHTML = rockIcon;
+      } else if (cellData == "~") {
+        cell.className = "currents";
+        cell.innerHTML = currentIcon;
+      } else if (cellData == "v") {
+        cell.className = "ships";
+        cell.innerHTML = shipIcon;
+      } else {
+        cell.className = "open-water";
+      }
+    });
+  });
+  $("#grid-return").append(table);
+}
+
+createTable(GRID);
+
+$('#rocks').click(function() {
+  var newText = allRocks();
+  $("#cell-return").text("Rocks located at: " + newText);
+  $(".box-shadow").removeClass("box-shadow");
+  $(".rocks").addClass("box-shadow");
+});
+
+$('#currents').click(function() {
+  var newText = allCurrents();
+  $("#cell-return").text("Currents located at: " + newText);
+  $(".box-shadow").removeClass("box-shadow");
+  $(".currents").addClass("box-shadow");
+});
+
+$('#ships').click(function() {
+  var newText = allShips();
+  $("#cell-return").text("Ships located at: " + newText);
+  $(".box-shadow").removeClass("box-shadow");
+  $(".ships").addClass("box-shadow");
+});
+
+$('#clear').click(function() {
+  var newText = "";
+  $("#cell-return").text(newText);
+  $(".box-shadow").removeClass("box-shadow");
+});
